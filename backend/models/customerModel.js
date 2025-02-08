@@ -18,10 +18,6 @@ const CustomerSchema = new mongoose.Schema({
     type:mongoose.Schema.Types.ObjectId,
     ref:'Reservation'
   }],
-  marketingAgreement: { 
-    type: Boolean 
-},
-  marketingAgreementDate: Date,
 },{
     timestamps: true
 });

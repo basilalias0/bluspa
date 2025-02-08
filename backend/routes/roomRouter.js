@@ -5,10 +5,10 @@ const authorize = require('../middlewares/authorize');
 const roomRouter = express.Router();
 
 
-roomRouter.get('/', roomController.getRooms);
-roomRouter.get('/:id', roomController.getRoomById);
-roomRouter.post('/', isAuth,authorize("Manager"),roomController.createRoom);
-roomRouter.put('/:id',isAuth,authorize("Manager"), roomController.updateRoom); 
-roomRouter.delete('/:id',isAuth,authorize("Manager"), roomController.deleteRoom); 
+roomRouter.get('/',isAuth, roomController.getRooms);
+roomRouter.get('/:id',isAuth, roomController.getRoomById);
+roomRouter.post('/', isAuth,authorize("Admin","Manager"),roomController.createRoom);
+roomRouter.put('/:id',isAuth,authorize("Admin","Manager"), roomController.updateRoom); 
+roomRouter.delete('/:id',isAuth,authorize("Admin","Manager"), roomController.deleteRoom); 
 
 module.exports = router;
