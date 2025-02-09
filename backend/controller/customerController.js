@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config()
 
+
 const customerController = {
     getAllCustomers:asyncHandler(async (req, res) => {
           const { search, name, email, phone, sortBy, sortOrder } = req.query;
@@ -48,7 +49,7 @@ const customerController = {
         throw new Error('Name, email, and password are required');
       }
     
-      const userExists = await User.findOne({ email });
+      const userExists = await Customer.findOne({ email });
     
       if (userExists) {
         res.status(400);
@@ -67,8 +68,8 @@ const customerController = {
         res.status(400).send("User not created");
       }
       const payload = {
-        id: user._id, 
-        role: user.role 
+        id: userCreated._id, 
+        role: userCreated.role 
       }
       const token = jwt.sign(
        payload,
@@ -85,17 +86,17 @@ const customerController = {
       });
   
       res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role, // Include the role in the response
+        _id: userCreated._id,
+        name: userCreated.name,
+        email: userCreated.email,
+        role: userCreated.role, // Include the role in the response
         token // You can send the token in the response or just rely on the cookie
       });
     }),
 
     updateName: asyncHandler(async (req, res) => {
       const { name } = req.body;
-      const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id, { name }, { new: true, runValidators: true });
+      const updatedCustomer = await Customer.findByIdAndUpdate(req.user.id, { name }, { new: true, runValidators: true });
       if (!updatedCustomer) {
         res.status(404);
         throw new Error('Customer not found');
@@ -107,12 +108,12 @@ const customerController = {
       const { email } = req.body;
   
           const existingCustomer = await Customer.findOne({ email });
-      if (existingCustomer && existingCustomer._id.toString() !== req.params.id) {
+      if (existingCustomer && existingCustomer._id.toString() !== req.user.id) {
         res.status(400);
         throw new Error('Email already exists');
       }
   
-      const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id, { email }, { new: true, runValidators: true });
+      const updatedCustomer = await Customer.findByIdAndUpdate(req.user.id, { email }, { new: true, runValidators: true });
       if (!updatedCustomer) {
         res.status(404);
         throw new Error('Customer not found');
@@ -122,7 +123,7 @@ const customerController = {
   
     updatePhone: asyncHandler(async (req, res) => {
       const { phone } = req.body;
-      const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id, { phone }, { new: true, runValidators: true });
+      const updatedCustomer = await Customer.findByIdAndUpdate(req.user.id, { phone }, { new: true, runValidators: true });
       if (!updatedCustomer) {
         res.status(404);
         throw new Error('Customer not found');
@@ -141,7 +142,7 @@ const customerController = {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
   
-      const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id, { password: hashedPassword }, { new: true, runValidators: true });
+      const updatedCustomer = await Customer.findByIdAndUpdate(req.user.id, { password: hashedPassword }, { new: true, runValidators: true });
       if (!updatedCustomer) {
         res.status(404);
         throw new Error('Customer not found');
@@ -151,7 +152,7 @@ const customerController = {
       
   
     deleteCustomer:asyncHandler( async (req, res) => {
-        const deletedCustomer = await Customer.findByIdAndDelete(req.params.id);
+        const deletedCustomer = await Customer.findByIdAndDelete(req.user.id) || req.params.id;
         if (!deletedCustomer) return res.status(404).json({ message: 'Customer not found' });
         res.status(204).end();
     }),

@@ -11,4 +11,4 @@ roomRouter.post('/', isAuth,authorize("Admin","Manager"),roomController.createRo
 roomRouter.put('/:id',isAuth,authorize("Admin","Manager"), roomController.updateRoom); 
 roomRouter.delete('/:id',isAuth,authorize("Admin","Manager"), roomController.deleteRoom); 
 
-module.exports = router;
+module.exports = roomRouter;

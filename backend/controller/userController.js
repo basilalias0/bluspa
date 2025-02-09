@@ -84,6 +84,8 @@ const userController = {
           res.status(401); // Set Unauthorized status
           throw new Error("Invalid credentials"); // Throw error for the error handler
         }
+        console.log(userFound.role);
+        
       
         const payload = { 
           username: userFound.username, 

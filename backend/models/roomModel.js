@@ -7,7 +7,7 @@ const RoomSchema = new mongoose.Schema({
     },
     notes: String,
     store: { 
-        type: Schema.Types.ObjectId, 
+        type: mongoose.Schema.Types.ObjectId, 
         ref: 'Store' 
     },
   },{
