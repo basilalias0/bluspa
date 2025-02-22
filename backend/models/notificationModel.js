@@ -1,28 +1,47 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const notificationSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User', // Reference to the User model
+    {
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        customer: {
+            type: Schema.Types.ObjectId,
+            ref: 'Customer',
+        },
+        store: {
+            type: Schema.Types.ObjectId,
+            ref: 'Store',
+        },
+        message: {
+            type: String,
+            required: true,
+        },
+        type: {
+            type: String,
+            required: true,
+        },
+        read: {
+            type: Boolean,
+            default: false,
+        },
+        relatedDocument: {
+            type: Schema.Types.ObjectId,
+            refPath: 'relatedDocumentModel',
+        },
+        relatedDocumentModel: {
+            type: String,
+            enum: ['Booking', 'Payment', 'Inventory', 'Customer'], // Add more as needed
+        },
+        data: {
+            type: Schema.Types.Mixed, // Allows for any data type
+        },
     },
-    message: {
-      type: String,
-      required: true,
-    },
-    type: { // e.g., 'payment', 'order', 'new_follower'
-      type: String,
-      required: true,
-    },
-    read: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true,
+    }
 );
 
 const Notification = mongoose.model('Notification', notificationSchema);

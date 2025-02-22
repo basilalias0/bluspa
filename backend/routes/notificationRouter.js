@@ -1,11 +1,17 @@
 const express = require('express');
-const notificaionRouter = express.Router();
-const isAuth = require('../middlewares/isAuth');
 const notificationController = require('../controller/notificationController');
+const isAuth = require('../middlewares/isAuth');
+const isAuthCustomer = require('../middlewares/isAuthCustomer');
+const authorize = require('../middlewares/authorize');
+const notificationRouter = express.Router();
 
-notificaionRouter.get('/', isAuth, notificationController.getNotifications);
-// notificaionRouter.post('/', isAuth, notificationController.createNotification)
-notificaionRouter.put('/:id', isAuth, notificationController.markAsRead);
-notificaionRouter.delete('/:id', isAuth, notificationController.deleteNotification);
+// Protected Routes (Admin/Manager/Employee - User Notifications)
+notificationRouter.post('/', isAuth, authorize('Admin', 'Manager', 'Employee'), notificationController.createNotification);
+notificationRouter.get('/user', isAuth, notificationController.getNotificationsByUser);
+notificationRouter.put('/read', isAuth, notificationController.markNotificationAsRead);
+notificationRouter.delete('/', isAuth, authorize('Admin', 'Manager', 'Employee'), notificationController.deleteNotification);
 
-module.exports = notificaionRouter
+// Protected Routes (Customer Notifications)
+notificationRouter.get('/customer', isAuthCustomer, notificationController.getNotificationsByCustomer);
+
+module.exports = notificationRouter;
