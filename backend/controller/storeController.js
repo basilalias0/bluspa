@@ -1,116 +1,144 @@
 const asyncHandler = require('express-async-handler');
 const Store = require('../models/storeModel');
-
+const mongoose = require('mongoose');
 
 const storeController = {
-  getStores: asyncHandler(async (req, res) => {
-    const stores = await Store.find();
-    res.json(stores);
-  }),
-
-  getStoreById: asyncHandler(async (req, res) => {
-    const store = await Store.findById(req.params.id);
-
-    if (!store) {
-      res.status(404);
-      throw new Error('Store not found');
-    }
-
-    res.json(store);
-  }),
-
-  createStore: asyncHandler(async (req, res) => {
-    const { name, address, openingHours, email, phone } = req.body;
-
-    if (!name || !address || !email || !phone) {
-      res.status(400);
-      throw new Error('Please provide all required fields');
-    }
-
-    const store = await Store.create({
-      name,
-      address,
-      openingHours,
-      email,
-      phone,
-    });
-
-    res.status(201).json(store);
-  }),
-
-  updateStore:  asyncHandler(async (req, res) => {
-    const storeId = req.params.id;
-    const { field, value } = req.body; // Get the field to update and its new value
-  
-    if (!field || !value) {
-      res.status(400);
-      throw new Error('Field and value are required');
-    }
-  
-    // 1. Validate the field (optional but recommended)
-    const allowedFields = ['name', 'address', 'email', 'phone']; // Add other fields as needed
-    if (!allowedFields.includes(field)) {
-      res.status(400);
-      throw new Error('Invalid field');
-    }
-      const updatedStore = await Store.findByIdAndUpdate(
-        storeId,
-        { [field]: value }, // Use bracket notation to dynamically update the field
-        { new: true, runValidators: true }
-      );
-  
-      if (!updatedStore) {
-        res.status(404);
-        throw new Error('Store not found');
-      }
-  
-      res.json(updatedStore);
-    
-  }),
-
-  updateOpeningHours:asyncHandler(async (req, res) => {
-    const storeId = req.params.id;
-    const { day, time, action } = req.body;
-  
-    if (!day || !time || !action || (action !== 'add' && action !== 'remove')) {
-      res.status(400);
-      throw new Error('Day, time, and action ("add" or "remove") are required');
-    }
-      let updatedStore;
-  
-      if (action === 'add') {
-        updatedStore = await Store.findByIdAndUpdate(
-          storeId,
-          { $addToSet: { [`openingHours.${day}`]: time } }, // Use $addToSet to prevent duplicates
-          { new: true, runValidators: true }
-        );
-      } else if (action === 'remove') {
-        updatedStore = await Store.findByIdAndUpdate(
-          storeId,
-          { $pull: { [`openingHours.${day}`]: time } }, // Use $pull to remove the time
-          { new: true, runValidators: true }
-        );
-      }
-  
-      if (!updatedStore) {
-        res.status(404);
-        throw new Error('Store not found');
-      }
-  
-      res.json(updatedStore)
-      
+    getStores: asyncHandler(async (req, res) => {
+        try {
+            const stores = await Store.find();
+            res.json(stores);
+        } catch (error) {
+            console.error('Error in getStores:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }),
 
-  deleteStore: asyncHandler(async (req, res) => {
-    const deletedStore = await Store.findByIdAndDelete(req.params.id); // Use findByIdAndDelete
+    getStoreById: asyncHandler(async (req, res) => {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                return res.status(400).json({ message: 'Invalid store ID' });
+            }
+            const store = await Store.findById(req.params.id);
+            if (!store) {
+                return res.status(404).json({ message: 'Store not found' });
+            }
+            res.json(store);
+        } catch (error) {
+            console.error('Error in getStoreById:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }),
 
-    if (!deletedStore) {
-      res.status(404);
-      throw new Error('Store not found');
-    }
+    createStore: asyncHandler(async (req, res) => {
+        try {
+            const { name, address, openingHours, email, phone, location, image, status } = req.body;
 
-    res.status(204).end(); // 204 No Content
-  }),
+            if (!name || !address || !email || !phone) {
+                return res.status(400).json({ message: 'Please provide all required fields' });
+            }
+
+            const store = await Store.create({
+                name,
+                address,
+                openingHours,
+                email,
+                phone,
+                location,
+                image,
+                status,
+            });
+
+            res.status(201).json(store);
+        } catch (error) {
+            if (error.name === 'ValidationError') {
+                return res.status(400).json({ message: 'Validation error', errors: error.errors });
+            }
+            console.error('Error in createStore:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }),
+
+    updateStore: asyncHandler(async (req, res) => {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                return res.status(400).json({ message: 'Invalid store ID' });
+            }
+            const storeId = req.params.id;
+            const { name, address, openingHours, email, phone, location, image, status } = req.body;
+
+            const updatedStore = await Store.findByIdAndUpdate(
+                storeId,
+                { name, address, openingHours, email, phone, location, image, status },
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedStore) {
+                return res.status(404).json({ message: 'Store not found' });
+            }
+
+            res.json(updatedStore);
+        } catch (error) {
+            if (error.name === 'ValidationError') {
+                return res.status(400).json({ message: 'Validation error', errors: error.errors });
+            }
+            console.error('Error in updateStore:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }),
+
+    updateOpeningHours: asyncHandler(async (req, res) => {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                return res.status(400).json({ message: 'Invalid store ID' });
+            }
+            const storeId = req.params.id;
+            const { day, open, close } = req.body;
+
+            if (!day || !open || !close) {
+                return res.status(400).json({ message: 'Day, open, and close times are required' });
+            }
+
+            const updatedStore = await Store.findByIdAndUpdate(
+                storeId,
+                { $set: { 'openingHours.$[elem].open': open, 'openingHours.$[elem].close': close } },
+                {
+                    new: true,
+                    runValidators: true,
+                    arrayFilters: [{ 'elem.day': day }],
+                }
+            );
+
+            if (!updatedStore) {
+                return res.status(404).json({ message: 'Store not found' });
+            }
+
+            res.json(updatedStore);
+        } catch (error) {
+            if (error.name === 'ValidationError') {
+                return res.status(400).json({ message: 'Validation error', errors: error.errors });
+            }
+            console.error('Error in updateOpeningHours:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }),
+
+    deleteStore: asyncHandler(async (req, res) => {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                return res.status(400).json({ message: 'Invalid store ID' });
+            }
+            const deletedStore = await Store.findByIdAndDelete(req.params.id);
+
+            if (!deletedStore) {
+                return res.status(404).json({ message: 'Store not found' });
+            }
+
+            res.status(204).end();
+        } catch (error) {
+            console.error('Error in deleteStore:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }),
 };
 
 module.exports = storeController;
